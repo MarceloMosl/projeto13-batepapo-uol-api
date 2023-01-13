@@ -2,13 +2,14 @@ import express, { json } from "express";
 import cors from "cors";
 import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
+import dayjs from "dayjs";
 dotenv.config();
 
 const mongoClient = new MongoClient(process.env.MONGO_URI);
 let db;
 
 mongoClient.connect().then(() => {
-  db = mongoClient.db("projeto14"); //O padrão é test
+  db = mongoClient.db(); //O padrão é test
 });
 
 const server = express();
@@ -17,18 +18,24 @@ server.use(json());
 
 server.post("/participants", async (req, res) => {
   const { name } = req.body;
-  if (!name)
-    return res.sendStatus(422).send(alert("name deve ser string não vazio"));
-
   const exist = await db.collection("participants").findOne({ name });
 
-  if (exist) return res.sendStatus(409).send(alert("usuario em uso"));
+  if (!name) return res.status(422).send("name deve ser string não vazio");
+
+  if (exist) return res.status(409).send("usuario em uso");
 
   try {
-    db.collection("participants").insertOne({ name });
-    res.send("usuario Cadastrado");
+    db.collection("participants").insertOne({ name, lastStatus: Date.now() });
+    res.sendStatus(201);
+    db.collection("messages").insertOne({
+      from: name,
+      to: "Todos",
+      text: "entra na sala...",
+      type: "status",
+      time: dayjs().format("HH:mm:ss"),
+    });
   } catch (err) {
-    res.send(err);
+    res.status(500).send(err);
   }
 });
 
