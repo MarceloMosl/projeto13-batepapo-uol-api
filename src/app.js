@@ -3,20 +3,22 @@ import cors from "cors";
 import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
 import dayjs from "dayjs";
+
 dotenv.config();
 
 const mongoClient = new MongoClient(process.env.MONGO_URL);
 let db;
 
-mongoClient.connect().then(() => {
-  db = mongoClient.db(); //O padrão é test
+mongoClient.connect(() => {
+  db = mongoClient.db();
 });
 
-const server = express();
-server.use(cors());
-server.use(json());
+const app = express();
+const PORT = 5000;
+app.use(cors());
+app.use(json());
 
-server.post("/participants", async (req, res) => {
+app.post("/participants", async (req, res) => {
   const { name } = req.body;
   const exist = await db.collection("participants").findOne({ name });
 
@@ -42,7 +44,7 @@ server.post("/participants", async (req, res) => {
   }
 });
 
-server.get("/participants", (req, res) => {
+app.get("/participants", (req, res) => {
   db.collection("participants")
     .find()
     .toArray()
@@ -51,4 +53,4 @@ server.get("/participants", (req, res) => {
     });
 });
 
-server.listen(5000, () => console.log("Tst"));
+app.listen(PORT, () => console.log("Tst"));
