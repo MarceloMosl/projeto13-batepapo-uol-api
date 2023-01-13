@@ -25,15 +25,18 @@ server.post("/participants", async (req, res) => {
   if (exist) return res.status(409).send("usuario em uso");
 
   try {
-    db.collection("participants").insertOne({ name, lastStatus: Date.now() });
-    res.sendStatus(201);
-    db.collection("messages").insertOne({
+    await db
+      .collection("participants")
+      .insertOne({ name, lastStatus: Date.now() });
+
+    await db.collection("messages").insertOne({
       from: name,
       to: "Todos",
       text: "entra na sala...",
       type: "status",
       time: dayjs().format("HH:mm:ss"),
     });
+    res.sendStatus(201);
   } catch (err) {
     res.status(500).send(err);
   }
