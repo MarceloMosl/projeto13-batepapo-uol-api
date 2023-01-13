@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import dayjs from "dayjs";
 dotenv.config();
 
-const mongoClient = new MongoClient(process.env.MONGO_URI);
+const mongoClient = new MongoClient(process.env.MONGO_URL);
 let db;
 
 mongoClient.connect().then(() => {
