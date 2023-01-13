@@ -38,7 +38,7 @@ app.post("/participants", async (req, res) => {
       type: "status",
       time: dayjs().format("HH:mm:ss"),
     });
-    res.sendStatus(201);
+    res.sendStatus(201).res("Ok");
   } catch (err) {
     res.status(500).send(err);
   }
