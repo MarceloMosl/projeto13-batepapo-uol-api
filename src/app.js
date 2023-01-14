@@ -12,13 +12,6 @@ const PORT = 5000;
 app.use(cors());
 app.use(json());
 
-// const mongoClient = new MongoClient(process.env.MONGO_URL);
-// let db;
-
-// mongoClient.connect(() => {
-//   db = mongoClient.db();
-// });
-
 let db;
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 
@@ -30,7 +23,7 @@ app.post("/participants", async (req, res) => {
   const { name } = req.body;
   const exist = await db.collection("participants").findOne({ name });
 
-  if (exist) return res.status(409);
+  if (exist) return res.status(409).send("usuario ja existe");
 
   const schemaJoi = joi.object({
     name: joi.string().required(),
@@ -71,13 +64,13 @@ app.get("/participants", (req, res) => {
 });
 
 app.get("/messages", async (req, res) => {
-  const limit = parseInt(req.query.limit);
-  if (typeof limit == String || limit <= 0)
+  const limit = req.query.limit;
+  if (limit & isNaN(req.query.limit) || limit <= 0)
     return res.status(422).send("quantidade de mensagens invalida");
   try {
     const messages = await db.collection("messages").find().toArray();
-    if (!limit) return res.send(messages);
-    res.send(messages.slice(-limit));
+    if (!limit) return res.send(messages.reverse());
+    res.send(messages.slice(-limit).reverse());
   } catch (error) {
     res.status(500).send(error);
   }
