@@ -7,17 +7,24 @@ import joi from "joi";
 
 dotenv.config();
 
-const mongoClient = new MongoClient(process.env.MONGO_URL);
-let db;
-
-mongoClient.connect(() => {
-  db = mongoClient.db();
-});
-
 const app = express();
 const PORT = 5000;
 app.use(cors());
 app.use(json());
+
+// const mongoClient = new MongoClient(process.env.MONGO_URL);
+// let db;
+
+// mongoClient.connect(() => {
+//   db = mongoClient.db();
+// });
+
+let db;
+const mongoClient = new MongoClient(process.env.DATABASE_URL);
+
+const dbWasConnected = await mongoClient.connect();
+
+if (dbWasConnected) db = mongoClient.db();
 
 app.post("/participants", async (req, res) => {
   const { name } = req.body;
@@ -33,7 +40,7 @@ app.post("/participants", async (req, res) => {
 
   if (validate.error) {
     const errors = validate.error.details.map((detail) => detail.message);
-    return res.status(422);
+    return res.status(422).send(errors);
   }
 
   try {
@@ -65,6 +72,8 @@ app.get("/participants", (req, res) => {
 
 app.get("/messages", async (req, res) => {
   const limit = parseInt(req.query.limit);
+  if (limit == string || limit <= 0)
+    return res.status(422).send("quantidade de mensagens invalida");
   try {
     const messages = await db.collection("messages").find().toArray();
     if (!limit) return res.send(messages);
