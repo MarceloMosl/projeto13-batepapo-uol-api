@@ -19,6 +19,8 @@ const dbWasConnected = await mongoClient.connect();
 
 if (dbWasConnected) db = mongoClient.db();
 
+removeUsers();
+
 app.post("/participants", async (req, res) => {
   const { name } = req.body;
   const exist = await db.collection("participants").findOne({ name });
@@ -65,10 +67,15 @@ app.get("/participants", (req, res) => {
 
 app.get("/messages", async (req, res) => {
   const limit = req.query.limit;
-  if (limit & isNaN(req.query.limit) || limit <= 0)
+  const user = req.headers.user;
+  if ((limit && isNaN(req.query.limit)) || limit <= 0)
     return res.status(422).send("quantidade de mensagens invalida");
   try {
-    const messages = await db.collection("messages").find().toArray();
+    const messages = await db
+      .collection("messages")
+      .find({ $or: [{ to: user }, { from: user }, { to: "Todos" }] })
+      .toArray();
+
     if (!limit) return res.send(messages.reverse());
     res.send(messages.slice(-limit).reverse());
   } catch (error) {
@@ -111,5 +118,49 @@ app.post("/messages", async (req, res) => {
     return res.status(500).send(error);
   }
 });
+
+app.post("/status", async (req, res) => {
+  const { user } = req.headers;
+  if (!user) return res.status(400).send("Bad request");
+  try {
+    const userOnline = await db
+      .collection("participants")
+      .findOne({ name: user });
+
+    if (!userOnline) return res.status(404).send("usuario nao existe");
+
+    await db
+      .collection("participants")
+      .updateOne({ name: user }, { $set: { lastStatus: Date.now() } });
+
+    return res.send(200);
+  } catch (error) {
+    res.send(error);
+  }
+});
+
+setInterval(removeUsers, 10000);
+
+async function removeUsers() {
+  const inativeTime = Date.now() - 10000;
+  try {
+    const inativeUsers = await db.collection("participants").find({}).toArray();
+    inativeUsers.forEach(async (element) => {
+      if (element.lastStatus < inativeTime) {
+        await db.collection("participants").deleteOne({ name: element.name });
+
+        await db.collection("messages").insertOne({
+          from: element.name,
+          to: "Todos",
+          text: "saiu da sala...",
+          type: "status",
+          time: dayjs().format("HH:mm:ss"),
+        });
+      }
+    }); // delete User
+  } catch (error) {
+    return error;
+  }
+}
 
 app.listen(PORT, () => console.log("Tst"));
