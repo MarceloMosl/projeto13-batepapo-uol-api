@@ -72,7 +72,7 @@ app.get("/participants", (req, res) => {
 
 app.get("/messages", async (req, res) => {
   const limit = parseInt(req.query.limit);
-  if (limit == string || limit <= 0)
+  if (typeof limit == String || limit <= 0)
     return res.status(422).send("quantidade de mensagens invalida");
   try {
     const messages = await db.collection("messages").find().toArray();
