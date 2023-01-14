@@ -88,14 +88,14 @@ app.post("/messages", async (req, res) => {
 
   if (validate.error) {
     const errors = validate.error.details.map((detail) => detail.message);
-    return res.status(422);
+    return res.status(422).send(errors);
   }
 
   try {
     const userExists = await db
       .collection("participants")
       .findOne({ name: user });
-    if (!userExists) return res.status(422);
+    if (!userExists) return res.status(422).send("Usuario Não Existe");
 
     db.collection("messages").insertOne({
       to,
@@ -104,7 +104,7 @@ app.post("/messages", async (req, res) => {
       from: user,
       time: dayjs().format("HH:mm:ss"),
     });
-    res.status(201);
+    res.status(201).send("mensagem enviada");
   } catch (error) {
     return res.status(500).send(error);
   }
