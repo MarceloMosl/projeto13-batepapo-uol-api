@@ -31,14 +31,14 @@ app.post("/participants", async (req, res) => {
       .collection("participants")
       .insertOne({ name, lastStatus: Date.now() });
 
-    await db.collection("messages").insertOne({
+    db.collection("messages").insertOne({
       from: name,
       to: "Todos",
       text: "entra na sala...",
       type: "status",
       time: dayjs().format("HH:mm:ss"),
     });
-    res.sendStatus(201).res("Ok");
+    res.sendStatus(201);
   } catch (err) {
     res.status(500).send(err);
   }
@@ -51,6 +51,17 @@ app.get("/participants", (req, res) => {
     .then((users) => {
       res.send(users);
     });
+});
+
+app.get("/messages", async (req, res) => {
+  const limit = parseInt(req.query.limit);
+  try {
+    const messages = await db.collection("messages").find().toArray();
+    if (!limit) return res.send(messages.reverse());
+    res.send(messages.slice(-limit).reverse());
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
 app.listen(PORT, () => console.log("Tst"));
