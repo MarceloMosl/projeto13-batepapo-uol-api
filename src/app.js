@@ -3,6 +3,7 @@ import cors from "cors";
 import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
 import dayjs from "dayjs";
+import joi from "joi";
 
 dotenv.config();
 
@@ -22,9 +23,18 @@ app.post("/participants", async (req, res) => {
   const { name } = req.body;
   const exist = await db.collection("participants").findOne({ name });
 
-  if (!name) return res.status(422).send("name deve ser string não vazio");
+  if (exist) return res.status(409);
 
-  if (exist) return res.status(409).send("usuario em uso");
+  const schemaJoi = joi.object({
+    name: joi.string().required(),
+  });
+
+  const validate = schemaJoi.validate(req.body);
+
+  if (validate.error) {
+    const errors = validate.error.details.map((detail) => detail.message);
+    return res.status(422);
+  }
 
   try {
     await db
