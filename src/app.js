@@ -1,6 +1,6 @@
 import express, { json } from "express";
 import cors from "cors";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import dotenv from "dotenv";
 import dayjs from "dayjs";
 import joi from "joi";
@@ -162,5 +162,26 @@ async function removeUsers() {
     return error;
   }
 }
+
+// DELETE
+
+app.delete("/messages/:id", async (req, res) => {
+  const user = req.headers.user;
+  const id = req.params;
+
+  const msgs = await db.collection("messages").findOne({ _id: ObjectId(id) });
+
+  if (!msgs) return res.status(404).send("mensagem nao existe");
+  console.log(msgs);
+
+  if (msgs.from === user) {
+    await db.collection("messages").deleteOne({ _id: ObjectId(id) });
+    return res.status(200).send("Mensagem Excluida");
+  } else {
+    console.log(user);
+    console.log(msgs.from);
+    return res.status(404).send("Não autorizado");
+  }
+});
 
 app.listen(PORT, () => console.log("Tst"));
