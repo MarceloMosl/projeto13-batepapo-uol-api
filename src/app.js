@@ -139,7 +139,7 @@ app.post("/status", async (req, res) => {
   }
 });
 
-setInterval(removeUsers, 10000);
+setInterval(removeUsers, 8000);
 
 async function removeUsers() {
   const inativeTime = Date.now() - 10000;
@@ -152,7 +152,7 @@ async function removeUsers() {
         await db.collection("messages").insertOne({
           from: element.name,
           to: "Todos",
-          text: "saiu da sala...",
+          text: "sai da sala...",
           type: "status",
           time: dayjs().format("HH:mm:ss"),
         });
