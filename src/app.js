@@ -178,8 +178,6 @@ app.delete("/messages/:id", async (req, res) => {
     await db.collection("messages").deleteOne({ _id: ObjectId(id) });
     return res.status(200).send("Mensagem Excluida");
   } else {
-    console.log(user);
-    console.log(msgs.from);
     return res.status(404).send("Não autorizado");
   }
 });
